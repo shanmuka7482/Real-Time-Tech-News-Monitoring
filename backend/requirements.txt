@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+apscheduler
+fastapi-cors
+bertopic
+sentence-transformers
+scikit-learn
+newsapi-python
+google-api-python-client
+youtube-transcript-api
+newspaper3k
+python-dotenv
