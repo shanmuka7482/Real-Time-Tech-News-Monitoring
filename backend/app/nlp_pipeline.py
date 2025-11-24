@@ -15,19 +15,29 @@ MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 def get_embedding_model():
     """Initializes and returns the sentence transformer model."""
-    return SentenceTransformer("all-MiniLM-L6-v2")
+    # Upgraded to a better model for higher quality embeddings
+    return SentenceTransformer("all-mpnet-base-v2")
 
 def get_bertopic_model(embedding_model):
     """Initializes and returns the BERTopic model."""
     # Initialize UMAP with a fixed random_state for reproducibility
-    # We also set n_components to 5 (default) explicitly
+    # Increased n_neighbors to capture more global structure
     from umap import UMAP
     umap_model = UMAP(n_neighbors=15, n_components=5, min_dist=0.0, metric='cosine', random_state=42)
 
-    vectorizer_model = CountVectorizer(stop_words="english")
+    # Initialize HDBSCAN to control cluster size
+    # min_cluster_size=10 prevents very small, noisy topics
+    from hdbscan import HDBSCAN
+    hdbscan_model = HDBSCAN(min_cluster_size=10, metric='euclidean', cluster_selection_method='eom', prediction_data=True)
+
+    # Configure CountVectorizer to ignore single characters and use English stop words
+    # token_pattern=r'(?u)\b\w\w+\b' ensures words have at least 2 characters
+    vectorizer_model = CountVectorizer(stop_words="english", analyzer='word', token_pattern=r'(?u)\b\w\w+\b')
+    
     return BERTopic(
         embedding_model=embedding_model,
         umap_model=umap_model,
+        hdbscan_model=hdbscan_model,
         vectorizer_model=vectorizer_model,
         language="english",
         calculate_probabilities=True,
