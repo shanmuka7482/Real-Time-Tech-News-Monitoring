@@ -72,7 +72,9 @@ def clear_and_create_topics(db: Session, topics_df):
             id=row['Topic'],
             name=row['Name'],
             count=row['Count'],
-            keywords=", ".join([word[0] for word in row['Representation']])
+            # BERTopic's Representation column contains a list of strings (the keywords)
+            # We should join them directly, not take the first character
+            keywords=", ".join(row['Representation'])
         )
         db.add(topic)
     db.commit()

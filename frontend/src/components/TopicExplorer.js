@@ -15,6 +15,7 @@ import {
   Text,
   Tag,
   HStack,
+  Link,
 } from '@chakra-ui/react';
 import ReactPlayer from 'react-player/youtube';
 import * as api from '../api';
@@ -70,6 +71,12 @@ function TopicExplorer() {
 
   const currentTopic = topics.find(t => t.id === parseInt(selectedTopic));
 
+  const getSnippet = (text) => {
+    if (!text) return 'No content available.';
+    // Take first 300 characters (approx 2-3 lines)
+    return text.length > 300 ? text.substring(0, 300) + '...' : text;
+  };
+
   return (
     <Box>
       <Heading mb={4}>Topic Explorer</Heading>
@@ -121,11 +128,26 @@ function TopicExplorer() {
                 </h2>
                 <AccordionPanel pb={4}>
                   {doc.source_type === 'video' ? (
-                    <Box sx={{ aspectRatio: '16/9', maxHeight: '500px' }}>
-                      <ReactPlayer url={doc.url} width="100%" height="100%" controls />
+                    <Box>
+                        <Box sx={{ aspectRatio: '16/9', maxHeight: '500px' }} mb={4}>
+                            <ReactPlayer url={doc.url} width="100%" height="100%" controls />
+                        </Box>
+                        <Text mb={2} fontStyle="italic">
+                            {getSnippet(doc.full_content)}
+                        </Text>
+                        <Link href={doc.url} isExternal color="blue.500">
+                            {doc.url}
+                        </Link>
                     </Box>
                   ) : (
-                    <Text whiteSpace="pre-wrap">{doc.full_content}</Text>
+                    <Box>
+                        <Text whiteSpace="pre-wrap" mb={2}>
+                            {getSnippet(doc.full_content)}
+                        </Text>
+                        <Link href={doc.url} isExternal color="blue.500">
+                            {doc.url}
+                        </Link>
+                    </Box>
                   )}
                 </AccordionPanel>
               </AccordionItem>
