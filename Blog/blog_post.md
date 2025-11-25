@@ -88,7 +88,7 @@ sequenceDiagram
     Scheduler->>DB: Save Topic Metadata
 ```
 
-We use **Sentence-Transformers** (`all-MiniLM-L6-v2`) to convert text into dense vector representations. Then, **BERTopic** handles the heavy lifting of dimensionality reduction and clustering to identify distinct topics like "AI Startups," "Crypto Regulations," or "New iPhone Launch."
+We use **Sentence-Transformers** (`all-mpnet-base-v2`) to convert text into dense vector representations. Then, **BERTopic** handles the heavy lifting of dimensionality reduction and clustering to identify distinct topics like "AI Startups," "Crypto Regulations," or "New iPhone Launch."
 
 ---
 
@@ -123,7 +123,7 @@ Topics aren't static. The system tracks the frequency of topics over time, allow
 ### 3. Automated Lifecycle
 Thanks to `APScheduler`, the system is self-sustaining:
 *   **Every 6 hours**: It checks for new data.
-*   **Every 24 hours**: It retrains the model to incorporate new information, ensuring the topics remain relevant.
+*   **Every 12 hours**: It retrains the model to incorporate new information, ensuring the topics remain relevant.
 
 ---
 

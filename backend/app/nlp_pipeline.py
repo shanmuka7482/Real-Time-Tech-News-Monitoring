@@ -4,6 +4,7 @@ from pathlib import Path
 from bertopic import BERTopic
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction import text
 from sqlalchemy.orm import Session
 from . import crud
 
@@ -32,7 +33,12 @@ def get_bertopic_model(embedding_model):
 
     # Configure CountVectorizer to ignore single characters and use English stop words
     # token_pattern=r'(?u)\b\w\w+\b' ensures words have at least 2 characters
-    vectorizer_model = CountVectorizer(stop_words="english", analyzer='word', token_pattern=r'(?u)\b\w\w+\b')
+    
+    # Define custom stop words to remove filler words and common noise
+    custom_stop_words = ["uh", "ll", "et", "like", "just", "say", "said", "new", "year", "news", "mr", "mrs", "ms"]
+    stop_words = list(text.ENGLISH_STOP_WORDS.union(custom_stop_words))
+    
+    vectorizer_model = CountVectorizer(stop_words=stop_words, analyzer='word', token_pattern=r'(?u)\b\w\w+\b')
     
     return BERTopic(
         embedding_model=embedding_model,
