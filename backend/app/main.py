@@ -1,7 +1,8 @@
 
 import json
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
+from pathlib import Path
 from typing import List, Dict, Any
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -33,6 +34,26 @@ app.add_middleware(
 
 # --- BACKGROUND SCHEDULER ---
 
+LAST_RUN_FILE = Path("last_run.json")
+
+def load_last_run_times() -> Dict[str, str]:
+    """Loads the last run timestamps from the JSON file."""
+    if LAST_RUN_FILE.exists():
+        try:
+            with open(LAST_RUN_FILE, 'r') as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            return {}
+    return {}
+
+def save_last_run_time(job_id: str):
+    """Saves the current timestamp as the last run time for the given job."""
+    data = load_last_run_times()
+    data[job_id] = datetime.now().isoformat()
+    with open(LAST_RUN_FILE, 'w') as f:
+        json.dump(data, f)
+
+
 def ingest_data_from_files():
     """Scheduled job to ingest data from the JSON files."""
     print("Scheduler: Running data ingestion job...")
@@ -57,6 +78,7 @@ def ingest_data_from_files():
         print("Scheduler: JSON data files not found. Skipping ingestion.")
     finally:
         db.close()
+        save_last_run_time("ingest_data")
 
 def update_nlp_model_job():
     """Scheduled job to update the NLP model with new data."""
@@ -67,15 +89,58 @@ def update_nlp_model_job():
         print("NLP model update job finished.")
     finally:
         db.close()
+        save_last_run_time("update_model")
 
 @app.on_event("startup")
 def start_scheduler():
     """Initializes and starts the background scheduler on app startup."""
     scheduler = BackgroundScheduler()
-    # Schedule data ingestion to run every 6 hours
+    
+    # Load last run times to check if we missed a schedule
+    last_runs = load_last_run_times()
+    now = datetime.now()
+    
+    # --- Ingest Data Job (Every 6 hours) ---
+    last_ingest_str = last_runs.get("ingest_data")
+    run_ingest_now = False
+    if last_ingest_str:
+        last_ingest = datetime.fromisoformat(last_ingest_str)
+        if now - last_ingest > timedelta(hours=6):
+            run_ingest_now = True
+            print("Scheduler: missed 'ingest_data' window. Running immediately.")
+    else:
+        # First run ever? Or file deleted. Run immediately to be safe/populate DB.
+        run_ingest_now = True
+        print("Scheduler: No last run record for 'ingest_data'. Running immediately.")
+
+    if run_ingest_now:
+        scheduler.add_job(ingest_data_from_files, trigger='date', run_date=datetime.now() + timedelta(seconds=5))
+
     scheduler.add_job(ingest_data_from_files, 'interval', hours=6, id="ingest_data")
-    # Schedule model retraining to run every 24 hours
-    scheduler.add_job(update_nlp_model_job, 'interval', hours=24, id="update_model")
+
+    # --- Update Model Job (Every 12 hours) ---
+    last_update_str = last_runs.get("update_model")
+    run_update_now = False
+    if last_update_str:
+        last_update = datetime.fromisoformat(last_update_str)
+        if now - last_update > timedelta(hours=12):
+            run_update_now = True
+            print("Scheduler: missed 'update_model' window. Running immediately.")
+    else:
+        # If no record, maybe we don't run immediately? Or maybe we do?
+        # Let's assume we run it if it's never run, or user can trigger manually.
+        # But for persistence, if it's missing, let's respect the interval or wait.
+        # However, user said: "If yes -> run immediately".
+        # If file doesn't exist, it's like "infinite time passed".
+        run_update_now = True
+        print("Scheduler: No last run record for 'update_model'. Running immediately.")
+
+    if run_update_now:
+        # Add a slight delay so it doesn't clash instantly with ingest if both run
+        scheduler.add_job(update_nlp_model_job, trigger='date', run_date=datetime.now() + timedelta(seconds=10))
+
+    scheduler.add_job(update_nlp_model_job, 'interval', hours=12, id="update_model")
+    
     scheduler.start()
     print("Background scheduler started.")
 
