@@ -1,6 +1,8 @@
 
 import json
 import threading
+import subprocess
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Any
@@ -57,6 +59,26 @@ def save_last_run_time(job_id: str):
 def ingest_data_from_files():
     """Scheduled job to ingest data from the JSON files."""
     print("Scheduler: Running data ingestion job...")
+    
+    # --- Run Scraping Scripts ---
+    print("Scheduler: Starting scraping scripts...")
+    try:
+        # Run article scraper
+        print("Scheduler: Running ingest_articles.py...")
+        subprocess.run([sys.executable, "scripts/ingest_articles.py"], check=True)
+        print("Scheduler: Finished ingest_articles.py")
+        
+        # Run video scraper
+        print("Scheduler: Running ingest_videos.py...")
+        subprocess.run([sys.executable, "scripts/ingest_videos.py"], check=True)
+        print("Scheduler: Finished ingest_videos.py")
+        
+    except subprocess.CalledProcessError as e:
+        print(f"Scheduler: Error running scraping scripts: {e}")
+        # We continue to try to ingest whatever data is available
+    except Exception as e:
+        print(f"Scheduler: Unexpected error running scraping scripts: {e}")
+
     db = SessionLocal()
     try:
         # In a real-world scenario, you'd fetch from APIs here.

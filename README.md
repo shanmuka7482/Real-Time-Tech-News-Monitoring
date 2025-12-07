@@ -1,15 +1,32 @@
+
+![Title Logo](Blog/assets/title_logo.png)
+
 # Multimodal News Topic Monitoring System
 
 This project is a complete, end-to-end system for ingesting, processing, and visualizing news topics from text articles and video transcripts related to "Indian Tech News".
+
+📖 **[Read the Building Process on Medium](https://medium.com/@crimsonnova917/building-a-real-time-multimodal-tech-news-monitor-with-fastapi-react-and-bertopic-198454d13378)**
+
+🎥 **[Watch the Project Presentation](Presentation/Full%20Presentation%20(AP22110010438).mp4)**
 
 ## Overview & Architecture
 
 The system is composed of four main components orchestrated with Docker:
 
+![System Architecture](Blog/assets/sys_arch.png)
+
 1.  **Database (PostgreSQL)**: The single source of truth for all data, running in a Docker container.
 2.  **Backend (FastAPI)**: A Python API that handles data ingestion, runs the NLP pipeline (BERTopic) for topic modeling, and serves the results to the frontend. It includes a scheduler for periodic data fetching and model updates.
 3.  **Frontend (React + Chakra UI)**: An interactive web dashboard that provides a user-friendly interface to visualize the discovered topics, their evolution over time, and the underlying documents.
 4.  **Deployment (Docker)**: The entire application is containerized using `docker-compose`, ensuring a consistent and reproducible setup across different environments.
+
+## 🧠 The AI Engine: How It Works
+
+The heart of this project is the `nlp_pipeline.py` module. Here's the flow of data through the AI engine:
+
+![Sequence Diagram](Blog/assets/sequence_diagram.png)
+
+We use **Sentence-Transformers** (`all-mpnet-base-v2`) to convert text into dense vector representations. Then, **BERTopic** handles the heavy lifting of dimensionality reduction and clustering.
 
 ## Technology Stack
 
@@ -41,14 +58,27 @@ The system is composed of four main components orchestrated with Docker:
 Follow these steps in order to build and run the application for the first time.
 
 1.  **Build all the services**:
-    ```bash
-    docker-compose build
-    ```
+    
+    *   **For Standard System (CPU)**:
+        ```bash
+        docker-compose -f docker-compose-cpu.yml build
+        ```
+    *   **For GPU System (NVIDIA)**:
+        ```bash
+        docker-compose -f docker-compose-gpu.yml build
+        ```
+
 
 2.  **Start the database service**:
-    ```bash
-    docker-compose up -d db
-    ```
+    
+    *   **CPU**:
+        ```bash
+        docker-compose -f docker-compose-cpu.yml up -d db
+        ```
+    *   **GPU**:
+        ```bash
+        docker-compose -f docker-compose-gpu.yml up -d db
+        ```
     **Wait for about 30 seconds** for the PostgreSQL database to initialize completely.
 
 3.  **Run the initial data ingestion scripts**:
@@ -65,10 +95,15 @@ Follow these steps in order to build and run the application for the first time.
     ```
 
 4.  **Start the backend service**:
-    The backend service will automatically copy the generated JSON files from the root directory into the container.
-    ```bash
-    docker-compose up -d backend
-    ```
+    
+    *   **CPU**:
+        ```bash
+        docker-compose -f docker-compose-cpu.yml up -d backend
+        ```
+    *   **GPU**:
+        ```bash
+        docker-compose -f docker-compose-gpu.yml up -d backend
+        ```
     Wait for a minute for the service to start and the application to initialize.
 
 5.  **Manually trigger the first model training**:
@@ -78,9 +113,15 @@ Follow these steps in order to build and run the application for the first time.
     ```
 
 6.  **Start the frontend service**:
-    ```bash
-    docker-compose up -d frontend
-    ```
+    
+    *   **CPU**:
+        ```bash
+        docker-compose -f docker-compose-cpu.yml up -d frontend
+        ```
+    *   **GPU**:
+        ```bash
+        docker-compose -f docker-compose-gpu.yml up -d frontend
+        ```
 
 ## How to Access
 

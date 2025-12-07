@@ -8,7 +8,9 @@ services:
       - app_network
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.gpu
     ports:
       - "8000:8000" # Expose backend API
     env_file: .env
@@ -16,8 +18,16 @@ services:
       - bertopic_model:/app/model
       - ./indian_tech_articles.json:/app/indian_tech_articles.json
       - ./indian_tech_videos.json:/app/indian_tech_videos.json
+      - ./scripts:/app/scripts
     depends_on:
       - db
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     networks:
       - app_network
 

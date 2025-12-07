@@ -97,6 +97,10 @@ def get_temporal_data(db: Session):
 def create_temporal_data(db: Session, temporal_data_df):
     """Saves the temporal data from BERTopic analysis."""
     for _, row in temporal_data_df.iterrows():
+        # Skip outlier topic -1 as it's not in the topics table
+        if row['Topic'] == -1:
+            continue
+
         temporal_entry = models.TemporalData(
             topic_id=row['Topic'],
             timestamp=row['Timestamp'],
