@@ -7,7 +7,7 @@ This project is a complete, end-to-end system for ingesting, processing, and vis
 
 📖 **[Read the Building Process on Medium](https://medium.com/@crimsonnova917/building-a-real-time-multimodal-tech-news-monitor-with-fastapi-react-and-bertopic-198454d13378)**
 
-🎥 **[Watch the Project Presentation](Presentation/Full%20Presentation%20(AP22110010438).mp4)**
+🎥 **[Watch the Project Presentation](https://drive.google.com/file/d/1Q2Fpvd0XO9terjUI_Lo64bzRDWbA4ShM/view?usp=sharing)**
 
 ## Overview & Architecture
 
